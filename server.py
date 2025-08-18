@@ -1,31 +1,32 @@
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from flask import Flask, send_file
+import os
+
+app = Flask(__name__)
 
 
-class MyHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        routes = {
-            "/": "index.html",
-            "/about": "about.html",
-            "/contact-me": "contact-me.html",
-        }
-
-        filename = routes.get(self.path, "404.html")
-        if filename == "404.html":
-            self.send_response(404)
-        else:
-            self.send_response(200)
-
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
-
-        with open(filename, "rb") as f:
-            self.wfile.write(f.read())
-
-        print("Served: ", filename)
+@app.route("/")
+def index():
+    return send_file("index.html")
 
 
-server_address = ("", 8080)
-httpd = HTTPServer(server_address, MyHandler)
+@app.route("/about")
+def about():
+    return send_file("about.html")
 
-print("Server running on http://localhost:8080")
-httpd.serve_forever()
+
+@app.route("/contact-me")
+def contact_me():
+    return send_file("contact-me.html")
+
+
+@app.route("/<path:path>")
+def catch_all(path):
+    return send_file("404.html"), 404
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    try:
+        app.run(port=port, debug=True)
+    except Exception as e:
+        raise RuntimeError(f"Failed to start server: {e}")
